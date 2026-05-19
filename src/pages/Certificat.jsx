@@ -19,85 +19,97 @@ export default function Certificat() {
     acte_individuel: null,
   });
 
-  const [previews, setPreviews] = useState({});
   const [loading, setLoading] = useState(false);
 
+  // ======================
+  // HANDLE INPUT TEXT
+  // ======================
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // ======================
+  // HANDLE FILES
+  // ======================
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    const name = e.target.name;
+    const { name, files: fileList } = e.target;
 
-    setFiles((prev) => ({ ...prev, [name]: file }));
-
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviews((prev) => ({ ...prev, [name]: reader.result }));
-      };
-      reader.readAsDataURL(file);
-    }
+    setFiles((prev) => ({
+      ...prev,
+      [name]: fileList[0],
+    }));
   };
 
+  // ======================
+  // SUBMIT FORM
+  // ======================
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const formData = new FormData();
-
-    // champs texte
-    Object.entries(form).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
-
-    // fichiers (IMPORTANT: nom inchangé)
-    Object.entries(files).forEach(([key, value]) => {
-      if (value) {
-        formData.append(key, value);
-      }
-    });
-
     try {
+      const formData = new FormData();
+
+      // champs texte
+      formData.append("nom", form.nom);
+      formData.append("prenom", form.prenom);
+      formData.append("telephone", form.telephone);
+
+      // fichiers
+      Object.keys(files).forEach((key) => {
+        if (files[key]) {
+          formData.append(key, files[key]);
+        }
+      });
+
+      // ======================
+      // API CREATE CERTIFICAT
+      // ======================
       const res = await fetch("http://localhost:3000/certificat", {
         method: "POST",
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Erreur serveur");
+      if (!res.ok) {
+        throw new Error("Erreur création certificat");
+      }
 
       const data = await res.json();
-      console.log("SUCCESS:", data);
 
-      alert("✅ Demande envoyée avec succès !");
-      navigate("/certificat/" + data.id);
+      console.log("CERTIFICAT CREATED:", data);
+
+      // ======================
+      // REDIRECTION PAGE PAIEMENT
+      // ======================
+      navigate(`/certificat/${data.id}`);
+
     } catch (error) {
       console.error(error);
-      alert("❌ Erreur lors de l'envoi");
+      alert("❌ Erreur lors de l'envoi du dossier");
     } finally {
       setLoading(false);
     }
   };
 
-  // styles
+  // ======================
+  // STYLES
+  // ======================
   const containerStyle = {
     maxWidth: "800px",
     margin: "20px auto",
     padding: "30px",
     backgroundColor: "#f9f9f9",
-    borderRadius: "8px",
-    boxShadow: "0 0 15px 8px rgba(0,0,0,0.1)",
-    fontFamily: "Arial, sans-serif",
+    borderRadius: "10px",
+    boxShadow: "0 0 15px rgba(0,0,0,0.1)",
+    fontFamily: "Arial",
   };
 
   const inputStyle = {
     width: "100%",
     padding: "12px",
-    marginBottom: "15px",
-    borderRadius: "8px",
+    marginBottom: "12px",
+    borderRadius: "6px",
     border: "1px solid #ccc",
-    fontSize: "16px",
   };
 
   const buttonStyle = {
@@ -106,22 +118,18 @@ export default function Certificat() {
     backgroundColor: "#007BFF",
     color: "#fff",
     border: "none",
-    borderRadius: "8px",
-    fontSize: "16px",
+    borderRadius: "6px",
     cursor: "pointer",
-  };
-
-  const imgStyle = {
-    width: "100%",
-    marginTop: "10px",
-    borderRadius: "8px",
   };
 
   return (
     <div style={containerStyle}>
-      <h1 style = {{ textAlign: "center",  backgroundColor: "orange", color: "#fff", padding: "10px" }}>📄 Demande de certificat</h1>
+      <h2 style={{ textAlign: "center", background: "orange", color: "#fff", padding: "10px" }}>
+        📄 Demande de certificat
+      </h2>
 
       <form onSubmit={handleSubmit}>
+        {/* TEXT FIELDS */}
         <input
           name="nom"
           placeholder="Nom"
@@ -146,36 +154,33 @@ export default function Certificat() {
           style={inputStyle}
         />
 
-        <h3 style={{ backgroundColor: "green", color: "#fff", padding: "10px" }}>Documents obligatoires</h3>
-        <label>Extrait de moins d'un an du demandeur:</label>
+        {/* FILES */}
+        <h3>📎 Documents obligatoires</h3>
 
+        <label>Extrait de naissance</label>
         <input type="file" name="extrait" onChange={handleFileChange} required />
-        {previews.extrait && <img src={previews.extrait} alt="aperçu" style={{width:"10%",marginBottom:"10px 0", textAlign:"center"}} />} <br /> <br /> <br />
-        <h3 style={{ backgroundColor: "lightgray", color: "#333", padding: "10px" }}>Pièce nationale d'identité du parent (CNI mère ou père)</h3>
-        <label>Recto:</label>
+
+        <label>Parent Recto</label>
         <input type="file" name="parent_recto" onChange={handleFileChange} required />
-        {previews.parent_recto && <img src={previews.parent_recto} alt="aperçu" style={{width:"10%",marginBottom:"10px 0", textAlign:"center"}} />} <br /> <br /><br />
 
-
-        <label>Verso:</label>
+        <label>Parent Verso</label>
         <input type="file" name="parent_verso" onChange={handleFileChange} required />
-        {previews.parent_verso && <img src={previews.parent_verso} alt="aperçu" style={{width:"10%",marginBottom:"10px 0", textAlign:"center"}} />} <br /> <br /><br />
 
+        <h3>📎 Documents facultatifs</h3>
 
-        <h3 style={{ backgroundColor: "#FFCC80", color: "#3E2723", padding: "10px" }}>Documents facultatifs</h3>
-        <label>Recto pièce d'identité (CNI de l'intéressé) :</label>
+        <label>Recto pièce</label>
         <input type="file" name="recto_piece" onChange={handleFileChange} />
-        {previews.recto_piece && <img src={previews.recto_piece} alt="aperçu" style={{width:"10%",marginBottom:"10px 0", textAlign:"center"}} />} <br /> <br /> <br />
-        <label>Verso pièce d'identité (CNI de l'intéressé) :</label>
+
+        <label>Verso pièce</label>
         <input type="file" name="verso_piece" onChange={handleFileChange} />
-        {previews.verso_piece && <img src={previews.verso_piece} alt="aperçu" style={{width:"10%",marginBottom:"10px 0", textAlign:"center"}} />} <br /> <br /> <br />
-        <label>Acte individualité de l'interressé:</label>
 
+        <label>Acte individuel</label>
         <input type="file" name="acte_individuel" onChange={handleFileChange} />
-        {previews.acte_individuel && <img src={previews.acte_individuel} alt="aperçu" style={{width:"10%",marginBottom:"10px 0"}} />} <br /> <br /> <br />
 
-        <button type="submit" disabled={loading} style={buttonStyle}>
-          {loading ? "⏳ Envoi..." : "Envoyer"}
+        <br /><br />
+
+        <button type="submit" style={buttonStyle} disabled={loading}>
+          {loading ? "⏳ Envoi..." : "Envoyer la demande"}
         </button>
       </form>
     </div>

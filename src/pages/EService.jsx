@@ -22,6 +22,13 @@ export default function EService() {
         >
           📑 Demande de casier judiciaire
         </button>
+        <button 
+          onClick={() => navigate("/Timbre")}
+          style={btn}
+        >
+          📄 Demande de timbre
+        </button>
+        
 
       </div>
     </div>

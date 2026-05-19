@@ -11,9 +11,11 @@ import Marche from "../pages/Marche";
 import EService from "../pages/EService";
 import Certificat from "../pages/Certificat";
 import Casier from "../pages/Casier";
+import Timbre from "../pages/Timbre";
 
 import MainLayout from "../layouts/MainLayout";
 import AuthLayout from "../layouts/AuthLayout";
+import Contact from "../pages/Contact";
 
 // 🔐 Routes privées
 function PrivateRoute({ children }) {
@@ -59,13 +61,20 @@ export default function AppRoutes() {
         <Route path="/eservice" element={
           <PrivateRoute><EService /></PrivateRoute>
         } />
-
+         
         <Route path="/Certificat" element={
           <PrivateRoute><Certificat /></PrivateRoute>
+        } />
+        <Route path="/Contact" element={
+          <PrivateRoute><Contact /></PrivateRoute>
         } />
 
         <Route path="/Casier" element={
           <PrivateRoute><Casier /></PrivateRoute>
+        } />
+
+        <Route path="/Timbre" element={
+          <PrivateRoute><Timbre /></PrivateRoute>
         } />
 
       </Route>
